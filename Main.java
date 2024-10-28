@@ -1,212 +1,111 @@
-abstract class Bicycle {
-    // Поля
-    private String brand;
-    private String model;
-    private int gearCount;
+import java.util.LinkedList;
 
+class HashTable<K, V> {
+    private class Entry<K, V> {
+        private K key;
+        private V value;
 
-    private static int bicycleCount = 0;
+        public Entry(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
 
+        public K getKey() {
+            return key;
+        }
 
-    public Bicycle() {
-        this.brand = "Unknown";
-        this.model = "Unknown";
-        this.gearCount = 1;
-        bicycleCount++;
-    }
+        public V getValue() {
+            return value;
+        }
 
-
-    public Bicycle(String brand, String model, int gearCount) {
-        this.brand = brand;
-        this.model = model;
-        this.gearCount = gearCount;
-        bicycleCount++;
-    }
-
-
-    public abstract void ride(); // Езда на велосипеде
-    public abstract void brake(); // Торможение
-
-
-    public String getBrand() {
-        return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
-    }
-
-    public String getModel() {
-        return model;
-    }
-
-    public void setModel(String model) {
-        this.model = model;
-    }
-
-    public int getGearCount() {
-        return gearCount;
-    }
-
-    public void setGearCount(int gearCount) {
-        this.gearCount = gearCount;
-    }
-
-
-    public static int getBicycleCount() {
-        return bicycleCount;
-    }
-
-
-    public void showInfo() {
-        System.out.println("Brand: " + brand + ", Model: " + model + ", Gears: " + gearCount);
-    }
-}
-
-
-class MountainBike extends Bicycle {
-    private String suspensionType;
-
-
-    public MountainBike() {
-        super();
-        this.suspensionType = "Standard";
-    }
-
-
-    public MountainBike(String brand, String model, int gearCount, String suspensionType) {
-        super(brand, model, gearCount);
-        this.suspensionType = suspensionType;
-    }
-
-
-    public String getSuspensionType() {
-        return suspensionType;
-    }
-
-    public void setSuspensionType(String suspensionType) {
-        this.suspensionType = suspensionType;
-    }
-
-
-    @Override
-    public void ride() {
-        System.out.println("Riding a mountain bike with " + getSuspensionType() + " suspension.");
-    }
-
-
-    @Override
-    public void brake() {
-        System.out.println("Braking the mountain bike.");
-    }
-}
-
-
-class KidsBike extends Bicycle {
-    private boolean hasTrainingWheels;
-
-
-    public KidsBike() {
-        super();
-        this.hasTrainingWheels = true;
-    }
-
-
-    public KidsBike(String brand, String model, int gearCount, boolean hasTrainingWheels) {
-        super(brand, model, gearCount);
-        this.hasTrainingWheels = hasTrainingWheels;
-    }
-
-
-    public boolean isHasTrainingWheels() {
-        return hasTrainingWheels;
-    }
-
-    public void setHasTrainingWheels(boolean hasTrainingWheels) {
-        this.hasTrainingWheels = hasTrainingWheels;
-    }
-
-
-    @Override
-    public void ride() {
-        if (hasTrainingWheels) {
-            System.out.println("Riding a kids bike with training wheels.");
-        } else {
-            System.out.println("Riding a kids bike without training wheels.");
+        public void setValue(V value) {
+            this.value = value;
         }
     }
 
+    private LinkedList<Entry<K, V>>[] table;
+    private int size;
+    private static final int DEFAULT_CAPACITY = 16;
 
-    @Override
-    public void brake() {
-        System.out.println("Braking the kids bike.");
-    }
-}
-
-
-class BMX extends Bicycle {
-    private boolean hasPegs;
-
-
-    public BMX() {
-        super();
-        this.hasPegs = false;
+    public HashTable() {
+        table = new LinkedList[DEFAULT_CAPACITY];
+        size = 0;
     }
 
-
-    public BMX(String brand, String model, int gearCount, boolean hasPegs) {
-        super(brand, model, gearCount);
-        this.hasPegs = hasPegs;
+    private int hash(K key) {
+        return Math.abs(key.hashCode()) % table.length;
     }
 
+    public void put(K key, V value) {
+        int index = hash(key);
 
-    public boolean isHasPegs() {
-        return hasPegs;
+        if (table[index] == null) {
+            table[index] = new LinkedList<>();
+        }
+
+        for (Entry<K, V> entry : table[index]) {
+            if (entry.getKey().equals(key)) {
+                entry.setValue(value);
+                return;
+            }
+        }
+
+        table[index].add(new Entry<>(key, value));
+        size++;
     }
 
-    public void setHasPegs(boolean hasPegs) {
-        this.hasPegs = hasPegs;
+    public V get(K key) {
+        int index = hash(key);
+
+        if (table[index] != null) {
+            for (Entry<K, V> entry : table[index]) {
+                if (entry.getKey().equals(key)) {
+                    return entry.getValue();
+                }
+            }
+        }
+
+        return null;
     }
 
+    public void remove(K key) {
+        int index = hash(key);
 
-    @Override
-    public void ride() {
-        if (hasPegs) {
-            System.out.println("Riding a BMX with pegs for stunts.");
-        } else {
-            System.out.println("Riding a BMX without pegs.");
+        if (table[index] != null) {
+            var iterator = table[index].iterator();
+            while (iterator.hasNext()) {
+                Entry<K, V> entry = iterator.next();
+                if (entry.getKey().equals(key)) {
+                    iterator.remove(); // Удаляем элемент
+                    size--;
+                    return;
+                }
+            }
         }
     }
 
+    public int size() {
+        return size;
+    }
 
-    @Override
-    public void brake() {
-        System.out.println("Braking the BMX.");
+    public boolean isEmpty() {
+        return size == 0;
     }
 }
-
-
 public class Main {
     public static void main(String[] args) {
+        HashTable<String, Integer> hashTable = new HashTable<>();
 
-        MountainBike mtb = new MountainBike("Trek", "X-Caliber", 21, "Full");
-        KidsBike kidsBike = new KidsBike("Giant", "Kids Pro", 1, true);
-        BMX bmx = new BMX("Mongoose", "Legion", 1, true);
+        hashTable.put("apple", 1);
+        hashTable.put("banana", 2);
+        hashTable.put("orange", 3);
 
-        // Вызов методов
-        mtb.showInfo();
-        mtb.ride();
-        mtb.brake();
+        System.out.println("Size: " + hashTable.size());
+        System.out.println("Get 'apple': " + hashTable.get("apple"));
 
-        kidsBike.showInfo();
-        kidsBike.ride();
-        kidsBike.brake();
+        hashTable.remove("banana");
+        System.out.println("Size after remove: " + hashTable.size());
 
-        bmx.showInfo();
-        bmx.ride();
-        bmx.brake();
-
-
-        System.out.println("Total bicycles created: " + Bicycle.getBicycleCount());
+        System.out.println("Is Empty: " + hashTable.isEmpty());
     }
 }
